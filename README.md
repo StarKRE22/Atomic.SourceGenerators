@@ -103,14 +103,14 @@ Set the import settings exactly as shown below:
 
 ### Declaring an API Definition
 
-Create a `public static` class and decorate it with `[EntityAPI(typeof(IEntity))]`.
+Create a `public static partial` class and decorate it with `[EntityAPI(typeof(IEntity))]`.
 
 ```csharp
 using Atomic.Entities;
 using UnityEngine;
 
 [EntityAPI(typeof(IEntity))]
-public static class PlayerAPI
+public static partial class PlayerAPI
 {
     public static readonly Tag Player;
     public static readonly Tag Enemy;
@@ -173,7 +173,7 @@ using Atomic.Entities;
 using UnityEngine;
 
 [EntityAPI(typeof(IEntity))]
-public static class PlayerAPI
+public static partial class PlayerAPI
 {
     public static readonly Tag Player;
     public static readonly int Health;
@@ -296,7 +296,7 @@ If you want to disable inlining for a specific API definition (for debugging or 
 
 ```csharp
 [EntityAPI(typeof(IEntity), AggressiveInlining = false)]
-public static class DebugPlayerAPI
+public static partial class DebugPlayerAPI
 {
     public static readonly int Health;
 }
@@ -318,7 +318,7 @@ Enable unsafe mode for the whole class:
 
 ```csharp
 [EntityAPI(typeof(IEntity), Unsafe = true)]
-public static class PlayerAPI
+public static partial class PlayerAPI
 {
     public static readonly int Health;
     public static readonly float Speed;
@@ -351,7 +351,7 @@ You can also mix modes. Apply the class-level `Unsafe = true` and override indiv
 
 ```csharp
 [EntityAPI(typeof(IEntity), Unsafe = true)]
-public static class MixedAPI
+public static partial class MixedAPI
 {
     public static readonly int Health;        // unsafe
     
