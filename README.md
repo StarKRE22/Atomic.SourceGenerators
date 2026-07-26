@@ -105,6 +105,8 @@ Set the import settings exactly as shown below:
 
 Create a `public static partial` class and decorate it with `[EntityAPI(typeof(IEntity))]`.
 
+The generator supports **three declaration styles** that can be mixed freely:
+
 ```csharp
 using Atomic.Entities;
 using UnityEngine;
@@ -112,23 +114,30 @@ using UnityEngine;
 [EntityAPI(typeof(IEntity))]
 public static partial class PlayerAPI
 {
-    public static readonly Tag Player;
-    public static readonly Tag Enemy;
+    // Tag declarations (all equivalent — pick one)
+    public static readonly Tag Alive;
+    public static readonly TagKey<IEntity> Dead;
 
+    // Value declarations — generic wrapper (type extracted automatically)
+    public static readonly ValueKey<IEntity, int> Mana;
+    public static readonly ValueKey<IEntity, float> Speed;
+
+    // Value declarations — plain types (legacy style, still fully supported)
     public static readonly int Health;
-    public static readonly float Speed;
     public static readonly Vector3 Position;
 }
 ```
 
-The generator reads every **public static field**:
+#### Declaration Styles
 
-| Field Type | Generated API |
-|------------|---------------|
-| `Tag` | Tag extension methods (`AddPlayerTag`, `HasPlayerTag`, `DelPlayerTag`) |
-| Any other type | Value extension methods (`GetHealth`, `SetHealth`, `AddHealth`, …) |
+| Declaration | Namespace Required | Resolves As | Example |
+|---|---|---|---|
+| `Tag Name` | `Atomic.Entities` | **Tag** | `public static readonly Tag Alive;` |
+| `TagKey<TContext> Name` | `Atomic.Entities` | **Tag** (context generic is ignored) | `public static readonly TagKey<IEntity> Dead;` |
+| `ValueKey<TContext, TValue> Name` | `Atomic.Entities` | **Value** (uses `TValue` as the method type) | `public static readonly ValueKey<IEntity, int> Mana;` |
+| Any other type | none | **Value** (uses the field type directly) | `public static readonly int Health;` |
 
-> 💡 **Tip:** The field type is used directly for the extension method signatures. Use `int`, `float`, `Vector3`, `IReactiveVariable<int>`, or any type your entity stores.
+> 💡 **Tip:** Use `ValueKey<IEntity, int>` if your project uses the Key pattern, or plain `int` if it doesn't — the generated extension methods are identical. The generator extracts the second generic argument (`int`) from `ValueKey<IEntity, int>` automatically.
 
 ---
 
@@ -175,7 +184,10 @@ using UnityEngine;
 [EntityAPI(typeof(IEntity))]
 public static partial class PlayerAPI
 {
-    public static readonly Tag Player;
+    public static readonly Tag Alive;
+    public static readonly TagKey<IEntity> Dead;
+
+    public static readonly ValueKey<IEntity, int> Mana;
     public static readonly int Health;
     public static readonly float Speed;
 }
@@ -200,41 +212,49 @@ using UnityEditor;
 public static partial class PlayerAPI
 {
     ///Values
+    private static readonly int ManaKey;   // int  (extracted from ValueKey<IEntity, int>)
     private static readonly int HealthKey; // int
-    private static readonly int SpeedKey; // float
+    private static readonly int SpeedKey;  // float
 
     ///Tags
-    private static readonly int PlayerKey;
+    private static readonly int AliveKey;
+    private static readonly int DeadKey;
 
     static PlayerAPI()
     {
+        ManaKey = NameToId(nameof(Mana));
         HealthKey = NameToId(nameof(Health));
         SpeedKey = NameToId(nameof(Speed));
-        PlayerKey = NameToId(nameof(Player));
+        AliveKey = NameToId(nameof(Alive));
+        DeadKey = NameToId(nameof(Dead));
     }
 
     ///Value Extensions
 
+    #region Mana
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetMana(this IEntity entity) => entity.GetValue<int>(ManaKey);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryGetMana(this IEntity entity, out int value) => entity.TryGetValue(ManaKey, out value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void AddMana(this IEntity entity, int value) => entity.AddValue(ManaKey, value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool HasMana(this IEntity entity) => entity.HasValue(ManaKey);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool DelMana(this IEntity entity) => entity.DelValue(ManaKey);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void SetMana(this IEntity entity, int value) => entity.SetValue(ManaKey, value);
+
+    #endregion
+
     #region Health
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetHealth(this IEntity entity) => entity.GetValue<int>(HealthKey);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryGetHealth(this IEntity entity, out int value) => entity.TryGetValue(HealthKey, out value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void AddHealth(this IEntity entity, int value) => entity.AddValue(HealthKey, value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasHealth(this IEntity entity) => entity.HasValue(HealthKey);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DelHealth(this IEntity entity) => entity.DelValue(HealthKey);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetHealth(this IEntity entity, int value) => entity.SetValue(HealthKey, value);
-
+    // ... same pattern for int
     #endregion
 
     #region Speed
@@ -243,16 +263,29 @@ public static partial class PlayerAPI
 
     ///Tag Extensions
 
-    #region Player
+    #region Alive
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasPlayerTag(this IEntity entity) => entity.HasTag(PlayerKey);
+    public static bool HasAliveTag(this IEntity entity) => entity.HasTag(AliveKey);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool AddPlayerTag(this IEntity entity) => entity.AddTag(PlayerKey);
+    public static bool AddAliveTag(this IEntity entity) => entity.AddTag(AliveKey);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DelPlayerTag(this IEntity entity) => entity.DelTag(PlayerKey);
+    public static bool DelAliveTag(this IEntity entity) => entity.DelTag(AliveKey);
+
+    #endregion
+
+    #region Dead
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool HasDeadTag(this IEntity entity) => entity.HasTag(DeadKey);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool AddDeadTag(this IEntity entity) => entity.AddTag(DeadKey);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool DelDeadTag(this IEntity entity) => entity.DelTag(DeadKey);
 
     #endregion
 }
@@ -260,7 +293,7 @@ public static partial class PlayerAPI
 
 ### Tags
 
-For every `Tag` field the generator creates:
+For every `Tag` or `TagKey<T>` field the generator creates:
 
 | Method | Description |
 |--------|-------------|
@@ -270,7 +303,7 @@ For every `Tag` field the generator creates:
 
 ### Values
 
-For every non-`Tag` field the generator creates:
+For every `ValueKey<T1, T2>` or non-`Tag`/`TagKey` field the generator creates (using the resolved value type):
 
 | Method | Description |
 |--------|-------------|

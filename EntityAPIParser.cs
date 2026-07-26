@@ -91,17 +91,32 @@ namespace EntityAPIGenerator
                 if (fieldSymbol == null)
                     continue;
 
-                // Tag → tag, anything else → value key
-                if (fieldSymbol.Type is INamedTypeSymbol namedType &&
-                    namedType.Name == "Tag" &&
-                    namedType.ContainingNamespace?.ToDisplayString() == "Atomic.Entities")
+                // Tag / TagKey<T> → tag, ValueKey<T1,T2> → value (extract T2), anything else → value
+                var namedType = fieldSymbol.Type as INamedTypeSymbol;
+                bool isAtomicEntities = namedType != null &&
+                    namedType.ContainingNamespace?.ToDisplayString() == "Atomic.Entities";
+
+                if (isAtomicEntities &&
+                    (namedType!.Name == "Tag" || namedType.Name == "TagKey"))
                 {
                     tags.Add(new TagField(fieldName));
                 }
                 else
                 {
                     bool fieldUnsafe = classUnsafe || HasUnsafeAttribute(fieldDecl);
-                    string valueTypeStr = fieldSymbol.Type.ToDisplayString();
+
+                    // ValueKey<TContext, TValue> → use the second generic argument as value type
+                    string valueTypeStr;
+                    if (isAtomicEntities &&
+                        namedType!.Name == "ValueKey" &&
+                        namedType.TypeArguments.Length >= 2)
+                    {
+                        valueTypeStr = namedType.TypeArguments[1].ToDisplayString();
+                    }
+                    else
+                    {
+                        valueTypeStr = fieldSymbol.Type.ToDisplayString();
+                    }
 
                     values.Add(new ValueField(fieldName, entityTypeName, valueTypeStr, fieldUnsafe));
                 }
