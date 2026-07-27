@@ -676,7 +676,10 @@ namespace MyAnalyzer
    Assets/Plugins/MyGenerators/
    ```
 3. In Unity, select each DLL and add the **Asset Label** `RoslynAnalyzer`.
-4. Ensure **Analyze Sources** and **Process Sources** are enabled in the DLL Inspector.
+4. Under **Select platforms for plugin**, uncheck **Any Platform**.
+5. Under **Include Platforms**, uncheck **Editor** and **Standalone** (and any other platforms).
+
+Leaving all platforms unchecked is correct; the DLL is only a compile-time analyzer/generator.
 
 ### Option B: Conditional MSBuild copy
 
@@ -711,9 +714,11 @@ After copying a DLL into `Assets/Plugins/...`:
 1. Select the DLL in the Project window.
 2. In the Inspector:
    - Add Asset Label: `RoslynAnalyzer`.
-   - Ensure **Analyze Sources** is checked (for analyzers).
-   - Ensure **Process Sources** is checked (for source generators).
+   - Under **Select platforms for plugin**, uncheck **Any Platform**.
+   - Under **Include Platforms**, uncheck **Editor** and **Standalone** (and any other platforms).
 3. If the DLL doesn't appear under `Assets/Plugins`, check Unity's `Editor.log` for load errors.
+
+> **Note:** Unity does **not** have an "Analyze Sources" or "Process Sources" checkbox. The `RoslynAnalyzer` asset label and platform settings are what activate analyzers and source generators.
 
 ## Performance considerations
 
@@ -1004,7 +1009,7 @@ When asked to create or debug a Unity Roslyn generator/analyzer/code fix:
 
 **Q:** "Quick fixes don't appear in the IDE."
 
-**A:** Ensure the analyzer project references `Microsoft.CodeAnalysis.CSharp.Workspaces` with `ExcludeAssets="runtime"`. Verify the DLL is labeled `RoslynAnalyzer` and `Analyze Sources` is enabled.
+**A:** Ensure the analyzer project references `Microsoft.CodeAnalysis.CSharp.Workspaces` with `ExcludeAssets="runtime"`. Verify the DLL is in `Assets/Plugins/...`, has the `RoslynAnalyzer` asset label, and has no platforms selected in the plugin inspector.
 
 ## Minimal end-to-end checklist
 
@@ -1017,7 +1022,7 @@ When asked to create or debug a Unity Roslyn generator/analyzer/code fix:
 - [ ] Analyzer reports diagnostics with unique IDs and categories.
 - [ ] Code fix provider uses `ExportCodeFixProvider` and `WellKnownFixAllProviders.BatchFixer`.
 - [ ] Build succeeds with 0 errors and 0 warnings.
-- [ ] DLLs deployed to Unity with `RoslynAnalyzer` label and `Analyze Sources` / `Process Sources` enabled.
+- [ ] DLLs deployed to Unity with `RoslynAnalyzer` label and no platforms selected (compile-time only).
 - [ ] Unity `Editor.log` shows no `CS9057` or load errors.
 
 ## References

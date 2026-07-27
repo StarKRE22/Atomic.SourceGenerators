@@ -57,7 +57,17 @@ dotnet build ../../SourceGenerators/Atomic.SourceGenerators.sln -c Release \
 
 Only the `.dll` is copied (no `.pdb`). If you don't pass these properties, copy the DLL manually from `bin/Release/netstandard2.0/`.
 
-Unity loads it alongside the source generators. Diagnostics appear in the Unity console and in the IDE.
+## Unity import settings
+
+1. Select the DLL in the Project window.
+2. In the Inspector:
+   - Add the **Asset Label** `RoslynAnalyzer`.
+   - Under **Select platforms for plugin**, uncheck **Any Platform**.
+   - Under **Include Platforms**, uncheck **Editor** and **Standalone** (and any other platforms).
+
+Leaving all platforms unchecked is correct — the analyzer only runs during compilation.
+
+Diagnostics appear in the Unity console and in the IDE once the DLL is loaded.
 
 ## Implementation notes
 

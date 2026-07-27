@@ -77,7 +77,7 @@ Make sure the DLL exists at:
 Assets/Plugins/Atomic/SourceGenerators/EntityAPIGenerator.dll
 ```
 
-If it wasn't copied, copy it manually from `bin/Release/netstandard2.0/`.The user wants me to fix the broken `Read` calls that happened because I didn't use the tool correctly. Actually looking at the conversation, I see that the previous assistant response included a weird 
+If it wasn't copied, copy it manually from `bin/Release/netstandard2.0/`.
 
 ---
 

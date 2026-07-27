@@ -87,7 +87,15 @@ The generator DLL is copied automatically to:
 Assets/Plugins/Atomic/SourceGenerators/EventAPIGenerator.dll
 ```
 
-Unity should import it with **Analyze Sources** enabled. If it doesn't, select the DLL in the Project view and tick **Analyze Sources** and **Process Sources** in the Inspector.
+Configure the DLL import settings so Unity treats it as a compile-time analyzer, not a runtime plugin:
+
+1. Select the DLL in the Project window.
+2. In the Inspector:
+   - Add the **Asset Label** `RoslynAnalyzer`.
+   - Under **Select platforms for plugin**, uncheck **Any Platform**.
+   - Under **Include Platforms**, uncheck **Editor** and **Standalone** (and any other platforms).
+
+Leaving all platforms unchecked is correct — the generator only runs during compilation.
 
 ## Build
 
@@ -105,7 +113,7 @@ dotnet build Atomic.SourceGenerators.sln -c Release \
   -p:AtomicUnityPluginDir="C:\YourProject\Assets\Plugins\Atomic\SourceGenerators"
 ```
 
-Only the `.dll` is copied (no `.pdb`). If you don't pass these properties, copy the DLL manually from `bin/Release/netstandard2.0/`.Provide only the new content of the file. Do not include explanations or old content.
+Only the `.dll` is copied (no `.pdb`). If you don't pass these properties, copy the DLL manually from `bin/Release/netstandard2.0/`.
 
 ## Implementation notes
 
