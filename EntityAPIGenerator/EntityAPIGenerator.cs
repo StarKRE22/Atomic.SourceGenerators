@@ -48,6 +48,16 @@ namespace EntityAPIGenerator
             return compilation.ReferencedAssemblyNames.Any(n => n.Name == CodegenAssemblyName);
         }
 
+        /// <summary>
+        /// Collects distinct entity type names used by value and tag fields.
+        /// </summary>
+        internal static System.Collections.Generic.IEnumerable<string> GetDistinctEntityTypes(EntityAPIDefinition def)
+        {
+            return def.Values.Select(v => v.EntityTypeName)
+                .Concat(def.Tags.Select(t => t.EntityTypeName))
+                .Distinct();
+        }
+
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             // Step 1: Find all candidate classes with [EntityAPI] attribute
@@ -94,11 +104,12 @@ namespace EntityAPIGenerator
                         sourceProductionContext.AddSource(hintName, source);
 
                         // Write to Temp/GeneratedCode/ for debugging (when ATOMIC_OUTPUT_SOURCEGEN_FILES is defined)
+                        string entityTypes = string.Join(", ", GetDistinctEntityTypes(def));
                         SourceOutputHelpers.OutputSourceToFile(assemblyName, hintName, () => source);
-                        SourceOutputHelpers.LogInfo($"Generated {assemblyName}/{hintName}: {def.Namespace}.{def.ClassName} → {def.EntityTypeName} ({def.Values.Count} values, {def.Tags.Count} tags, unsafe={def.Unsafe})");
+                        SourceOutputHelpers.LogInfo($"Generated {assemblyName}/{hintName}: {def.Namespace}.{def.ClassName} → [{entityTypes}] ({def.Values.Count} values, {def.Tags.Count} tags, unsafe={def.Unsafe})");
 
                         logger.LogInfo("EAG0001", "EntityAPIGenerator Trace",
-                            $"Generated: {def.Namespace}.{def.ClassName} → {def.EntityTypeName} " +
+                            $"Generated: {def.Namespace}.{def.ClassName} → [{entityTypes}] " +
                             $"({def.Values.Count} values, {def.Tags.Count} tags, unsafe={def.Unsafe})");
                     }
                     catch (Exception exception) when (exception is not OperationCanceledException)

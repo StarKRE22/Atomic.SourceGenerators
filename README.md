@@ -19,9 +19,14 @@ SourceGenerators/
 │   ├── CodeEmitter.cs
 │   ├── Models/
 │   └── README.md
-└── EventAPIGenerator/               # [EventAPI] generator (skeleton)
-    ├── EventAPIGenerator.csproj
-    └── EventAPIGenerator.cs
+├── EventAPIGenerator/             # [EventAPI] generator (skeleton)
+│   ├── EventAPIGenerator.csproj
+│   └── EventAPIGenerator.cs
+└── EntityAPIAnalyzer/               # diagnostics for [EntityAPI] classes
+    ├── EntityAPIAnalyzer.csproj
+    ├── EntityAPIAnalyzer.cs
+    ├── EntityAPIDiagnostics.cs
+    └── README.md
 ```
 
 ## 🔧 Shared Code
@@ -98,6 +103,7 @@ Assets/Plugins/Atomic/SourceGenerators/
 ## 📚 Generator-Specific Documentation
 
 - [EntityAPIGenerator README](EntityAPIGenerator/README.md) — usage of `[EntityAPI]`, generated tag/value extension methods, and Unity import settings.
+- [EntityAPIAnalyzer README](EntityAPIAnalyzer/README.md) — analyzer rules that validate `[EntityAPI]` class declarations.
 
 ## ⚠️ Important Notes
 

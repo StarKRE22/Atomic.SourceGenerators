@@ -2,9 +2,9 @@
 
 > Part of the [Atomic Source Generators](../README.md) solution. Common generator infrastructure (Roslyn 4.3.0 settings, shared helpers) lives in the parent folder.
 
-The **Entity API Source Generator** is a Roslyn incremental source generator that turns a simple C# class into strongly typed, autocompleted extension methods for **Atomic.Entities** tags and values.
+The **Entity API Source Generator** is a Roslyn incremental source generator that turns a static class with `ValueKey<>` / `TagKey<>` fields into strongly typed, autocompleted extension methods for **Atomic.Entities** tags and values.
 
-Unlike the legacy `.atomic` YAML or Rider-plugin workflows, this generator works **directly inside the Unity compiler** using the `[EntityAPI]` attribute. Add the DLL to your project, mark a static class, and the extension methods appear automatically on every build.
+Unlike the legacy `.atomic` YAML or Rider-plugin workflows, this generator works **directly inside the Unity compiler** using the `[EntityAPI]` attribute. Add the DLL to your project, mark a static class with key fields, and the extension methods appear automatically on every build.
 
 ---
 
@@ -25,6 +25,7 @@ Unlike the legacy `.atomic` YAML or Rider-plugin workflows, this generator works
   - [Aggressive Inlining](#aggressive-inlining)
   - [Unsafe Mode](#unsafe-mode)
 - [Configuration Attributes](#-configuration-attributes)
+- [Analyzer](#-analyzer)
 - [Troubleshooting](#-troubleshooting)
 
 ---
@@ -112,41 +113,38 @@ Set the import settings exactly as shown below:
 
 ### Declaring an API Definition
 
-Create a `public static partial` class and decorate it with `[EntityAPI(typeof(IEntity))]`.
-
-The generator supports **three declaration styles** that can be mixed freely:
+Create a `public static partial` class and decorate it with `[EntityAPI]`. Declare static fields of type `ValueKey<TContext, TValue>` or `TagKey<TContext>`. The entity type is taken from the key's first generic argument, so each field can target a different entity interface if needed.
 
 ```csharp
 using Atomic.Entities;
 using UnityEngine;
 
-[EntityAPI(typeof(IEntity))]
+[EntityAPI]
 public static partial class PlayerAPI
 {
-    // Tag declarations (all equivalent — pick one)
-    public static readonly Tag Alive;
-    public static readonly TagKey<IEntity> Dead;
+    // Tag declarations
+    public static readonly TagKey<IEntity> Alive = new(nameof(Alive));
+    public static readonly TagKey<IEntity> Dead = new(nameof(Dead));
 
-    // Value declarations — generic wrapper (type extracted automatically)
-    public static readonly ValueKey<IEntity, int> Mana;
-    public static readonly ValueKey<IEntity, float> Speed;
-
-    // Value declarations — plain types (legacy style, still fully supported)
-    public static readonly int Health;
-    public static readonly Vector3 Position;
+    // Value declarations
+    public static readonly ValueKey<IEntity, int> Mana = new(nameof(Mana));
+    public static readonly ValueKey<IEntity, float> Speed = new(nameof(Speed));
+    public static readonly ValueKey<IPlayerContext, Camera> Camera = new(nameof(Camera));
 }
 ```
 
 #### Declaration Styles
 
-| Declaration | Namespace Required | Resolves As | Example |
-|---|---|---|---|
-| `Tag Name` | `Atomic.Entities` | **Tag** | `public static readonly Tag Alive;` |
-| `TagKey<TContext> Name` | `Atomic.Entities` | **Tag** (context generic is ignored) | `public static readonly TagKey<IEntity> Dead;` |
-| `ValueKey<TContext, TValue> Name` | `Atomic.Entities` | **Value** (uses `TValue` as the method type) | `public static readonly ValueKey<IEntity, int> Mana;` |
-| Any other type | none | **Value** (uses the field type directly) | `public static readonly int Health;` |
+| Declaration | Namespace Required | Entity Type | Resolves As | Example |
+|---|---|---|---|---|
+| `TagKey<TContext> Name` | `Atomic.Entities` | `TContext` | **Tag** | `public static readonly TagKey<IEntity> Alive = new(nameof(Alive));` |
+| `TagKey Name` | `Atomic.Entities` | `IEntity` | **Tag** | `public static readonly TagKey Alive = new(nameof(Alive));` |
+| `ValueKey<TContext, TValue> Name` | `Atomic.Entities` | `TContext` | **Value** (uses `TValue`) | `public static readonly ValueKey<IEntity, int> Mana = new(nameof(Mana));` |
+| `ValueKey<TValue> Name` | `Atomic.Entities` | `IEntity` | **Value** (uses `TValue`) | `public static readonly ValueKey<int> Mana = new(nameof(Mana));` |
 
-> 💡 **Tip:** Use `ValueKey<IEntity, int>` if your project uses the Key pattern, or plain `int` if it doesn't — the generated extension methods are identical. The generator extracts the second generic argument (`int`) from `ValueKey<IEntity, int>` automatically.
+> 💡 **Tip:** Always initialize key fields (e.g. `new(nameof(Mana))`). The generated extension methods read the field's `Id` property, which is computed by the constructor. The [EntityAPIAnalyzer](../EntityAPIAnalyzer/README.md) reports missing or parameterless initializers as build errors.
+
+> ⚠️ **Plain types and the legacy `Tag` struct are no longer supported.** Use `ValueKey<>` / `TagKey<>` for every field.
 
 ---
 
@@ -190,15 +188,15 @@ For each `[EntityAPI]` class the generator emits a matching `partial` class with
 using Atomic.Entities;
 using UnityEngine;
 
-[EntityAPI(typeof(IEntity))]
+[EntityAPI]
 public static partial class PlayerAPI
 {
-    public static readonly Tag Alive;
-    public static readonly TagKey<IEntity> Dead;
+    public static readonly TagKey<IEntity> Alive = new(nameof(Alive));
+    public static readonly TagKey<IEntity> Dead = new(nameof(Dead));
 
-    public static readonly ValueKey<IEntity, int> Mana;
-    public static readonly int Health;
-    public static readonly float Speed;
+    public static readonly ValueKey<IEntity, int> Mana = new(nameof(Mana));
+    public static readonly ValueKey<IEntity, float> Speed = new(nameof(Speed));
+    public static readonly ValueKey<IPlayerContext, Camera> Camera = new(nameof(Camera));
 }
 ```
 
@@ -210,64 +208,40 @@ public static partial class PlayerAPI
  **/
 
 using Atomic.Entities;
-using static Atomic.Entities.EntityKeyStore;
 using System.Runtime.CompilerServices;
-using UnityEngine;
-using Atomic.Elements;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 public static partial class PlayerAPI
 {
-    ///Values
-    private static readonly int ManaKey;   // int  (extracted from ValueKey<IEntity, int>)
-    private static readonly int HealthKey; // int
-    private static readonly int SpeedKey;  // float
-
-    ///Tags
-    private static readonly int AliveKey;
-    private static readonly int DeadKey;
-
-    static PlayerAPI()
-    {
-        ManaKey = NameToId(nameof(Mana));
-        HealthKey = NameToId(nameof(Health));
-        SpeedKey = NameToId(nameof(Speed));
-        AliveKey = NameToId(nameof(Alive));
-        DeadKey = NameToId(nameof(Dead));
-    }
-
     ///Value Extensions
 
     #region Mana
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int GetMana(this IEntity entity) => entity.GetValue<int>(ManaKey);
+    public static int GetMana(this IEntity entity) => entity.GetValue<int>(PlayerAPI.Mana.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool TryGetMana(this IEntity entity, out int value) => entity.TryGetValue(ManaKey, out value);
+    public static bool TryGetMana(this IEntity entity, out int value) => entity.TryGetValue(PlayerAPI.Mana.Id, out value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void AddMana(this IEntity entity, int value) => entity.AddValue(ManaKey, value);
+    public static void AddMana(this IEntity entity, int value) => entity.AddValue(PlayerAPI.Mana.Id, value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasMana(this IEntity entity) => entity.HasValue(ManaKey);
+    public static bool HasMana(this IEntity entity) => entity.HasValue(PlayerAPI.Mana.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DelMana(this IEntity entity) => entity.DelValue(ManaKey);
+    public static bool DelMana(this IEntity entity) => entity.DelValue(PlayerAPI.Mana.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetMana(this IEntity entity, int value) => entity.SetValue(ManaKey, value);
+    public static void SetMana(this IEntity entity, int value) => entity.SetValue(PlayerAPI.Mana.Id, value);
 
-    #endregion
-
-    #region Health
-    // ... same pattern for int
     #endregion
 
     #region Speed
-    // ... same pattern for float
+    // ... same pattern for float (extends IEntity)
+    #endregion
+
+    #region Camera
+    // ... extends IPlayerContext
     #endregion
 
     ///Tag Extensions
@@ -275,34 +249,25 @@ public static partial class PlayerAPI
     #region Alive
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasAliveTag(this IEntity entity) => entity.HasTag(AliveKey);
+    public static bool HasAliveTag(this IEntity entity) => entity.HasTag(PlayerAPI.Alive.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool AddAliveTag(this IEntity entity) => entity.AddTag(AliveKey);
+    public static bool AddAliveTag(this IEntity entity) => entity.AddTag(PlayerAPI.Alive.Id);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DelAliveTag(this IEntity entity) => entity.DelTag(AliveKey);
+    public static bool DelAliveTag(this IEntity entity) => entity.DelTag(PlayerAPI.Alive.Id);
 
     #endregion
 
     #region Dead
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasDeadTag(this IEntity entity) => entity.HasTag(DeadKey);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool AddDeadTag(this IEntity entity) => entity.AddTag(DeadKey);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DelDeadTag(this IEntity entity) => entity.DelTag(DeadKey);
-
+    // ... same pattern
     #endregion
 }
 ```
 
 ### Tags
 
-For every `Tag` or `TagKey<T>` field the generator creates:
+For every `TagKey` / `TagKey<T>` field the generator creates:
 
 | Method | Description |
 |--------|-------------|
@@ -312,7 +277,7 @@ For every `Tag` or `TagKey<T>` field the generator creates:
 
 ### Values
 
-For every `ValueKey<T1, T2>` or non-`Tag`/`TagKey` field the generator creates (using the resolved value type):
+For every `ValueKey<TContext, TValue>` or `ValueKey<TValue>` field the generator creates (using the resolved value type and entity type):
 
 | Method | Description |
 |--------|-------------|
@@ -337,17 +302,17 @@ public static int GetHealth(this IEntity entity) => entity.GetValue<int>(HealthK
 If you want to disable inlining for a specific API definition (for debugging or profiling), set the attribute property:
 
 ```csharp
-[EntityAPI(typeof(IEntity), AggressiveInlining = false)]
+[EntityAPI(AggressiveInlining = false)]
 public static partial class DebugPlayerAPI
 {
-    public static readonly int Health;
+    public static readonly ValueKey<IEntity, int> Health = new(nameof(Health));
 }
 ```
 
 Without aggressive inlining, the generated method looks identical but without the attribute:
 
 ```csharp
-public static int GetHealth(this IEntity entity) => entity.GetValue<int>(HealthKey);
+public static int GetHealth(this IEntity entity) => entity.GetValue<int>(DebugPlayerAPI.Health.Id);
 ```
 
 ---
@@ -359,11 +324,11 @@ For maximum performance, you can generate **unsafe** value accessors. Unsafe mod
 Enable unsafe mode for the whole class:
 
 ```csharp
-[EntityAPI(typeof(IEntity), Unsafe = true)]
+[EntityAPI(Unsafe = true)]
 public static partial class PlayerAPI
 {
-    public static readonly int Health;
-    public static readonly float Speed;
+    public static readonly ValueKey<IEntity, int> Health = new(nameof(Health));
+    public static readonly ValueKey<IEntity, float> Speed = new(nameof(Speed));
 }
 ```
 
@@ -371,34 +336,34 @@ public static partial class PlayerAPI
 
 ```csharp
 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-public static int GetHealth(this IEntity entity) => entity.GetValueUnsafe<int>(HealthKey);
+public static int GetHealth(this IEntity entity) => entity.GetValueUnsafe<int>(PlayerAPI.Health.Id);
 
 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-public static ref int RefHealth(this IEntity entity) => ref entity.GetValueUnsafe<int>(HealthKey);
+public static ref int RefHealth(this IEntity entity) => ref entity.GetValueUnsafe<int>(PlayerAPI.Health.Id);
 
 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-public static bool TryGetHealth(this IEntity entity, out int value) => entity.TryGetValueUnsafe(HealthKey, out value);
+public static bool TryGetHealth(this IEntity entity, out int value) => entity.TryGetValueUnsafe(PlayerAPI.Health.Id, out value);
 ```
 
 ### Comparison: Safe vs Unsafe
 
 | Mode | `Get` Implementation | `Ref` Method | Use when |
 |------|----------------------|--------------|----------|
-| Safe | `entity.GetValue<int>(HealthKey)` | ❌ no | You need validation and safety guarantees. |
-| Unsafe | `entity.GetValueUnsafe<int>(HealthKey)` | ✅ `ref int RefHealth(...)` | You have verified the value exists and want zero-overhead access. |
+| Safe | `entity.GetValue<int>(PlayerAPI.Health.Id)` | ❌ no | You need validation and safety guarantees. |
+| Unsafe | `entity.GetValueUnsafe<int>(PlayerAPI.Health.Id)` | ✅ `ref int RefHealth(...)` | You have verified the value exists and want zero-overhead access. |
 
 > ⚠️ **Warning:** `Unsafe = true` removes runtime checks. Calling `GetHealth` on an entity that does not have the value can crash or return undefined data. Only use unsafe mode in performance-critical, verified code paths.
 
 You can also mix modes. Apply the class-level `Unsafe = true` and override individual fields back to safe using the `[Unsafe(false)]` field attribute (or vice versa). Note that the source generator currently recognizes the field-level `[Unsafe]` attribute as a per-field override.
 
 ```csharp
-[EntityAPI(typeof(IEntity), Unsafe = true)]
+[EntityAPI(Unsafe = true)]
 public static partial class MixedAPI
 {
-    public static readonly int Health;        // unsafe
+    public static readonly ValueKey<IEntity, int> Health = new(nameof(Health));        // unsafe
     
     [Unsafe(false)]
-    public static readonly float Speed;       // safe
+    public static readonly ValueKey<IEntity, float> Speed = new(nameof(Speed));       // safe
 }
 ```
 
@@ -410,15 +375,22 @@ public static partial class MixedAPI
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `entityType` | `Type` | — | The entity type the extensions target (`IEntity` or a derived interface). |
 | `Unsafe` | `bool` | `false` | When `true`, uses unsafe value accessors and emits `Ref{Name}` methods. |
 | `AggressiveInlining` | `bool` | `true` | When `true`, adds `[MethodImpl(MethodImplOptions.AggressiveInlining)]` to every method. |
+
+> The entity type is no longer passed to `[EntityAPI]`. It is read from each field's first generic argument (`ValueKey<TContext, TValue>` / `TagKey<TContext>`). `ValueKey<TValue>` / `TagKey` default to `IEntity`.
 
 ### `[Unsafe]`
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `value` | `bool` | `true` | Override the class-level unsafe flag for a single field. |
+
+---
+
+## 🔬 Analyzer
+
+Deploy the [EntityAPIAnalyzer](../EntityAPIAnalyzer/README.md) DLL alongside the generator. It reports build errors when `ValueKey<>` / `TagKey<>` fields inside `[EntityAPI]` classes are missing an initializer or are initialized with `new()` / `default`.
 
 ---
 
@@ -435,6 +407,7 @@ public static partial class MixedAPI
 
 - Ensure the DLL is **not** included in any runtime platform. Source generators are compile-time-only analyzers.
 - If you see `RS1035` warnings, they are harmless and disabled inside the generator project.
+- Ensure all `[EntityAPI]` fields are `ValueKey<>` or `TagKey<>` and are initialized (e.g. `new(nameof(Field))`). The analyzer reports missing initializers.
 
 ### Generated file is not written to disk
 

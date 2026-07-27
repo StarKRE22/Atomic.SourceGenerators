@@ -50,10 +50,6 @@ namespace EntityAPIGenerator
             if (!TryGetEntityAPIAttribute(classSymbol.GetAttributes(), out var attributeData))
                 return null;
 
-            // Extract entity type from constructor argument: typeof(IPlayerContext)
-            if (!TryExtractEntityType(attributeData!, out var entityTypeName) || entityTypeName == null)
-                return null;
-
             // Extract class-level Unsafe flag
             bool classUnsafe = TryGetNamedArgBool(attributeData!, "Unsafe");
 
@@ -75,7 +71,7 @@ namespace EntityAPIGenerator
                 if (member is not FieldDeclarationSyntax fieldDecl)
                     continue;
 
-                // Only static fields
+                // Any static field is allowed (including non-public)
                 if (!fieldDecl.Modifiers.Any(SyntaxKind.StaticKeyword))
                     continue;
 
@@ -91,41 +87,51 @@ namespace EntityAPIGenerator
                 if (fieldSymbol == null)
                     continue;
 
-                // Tag / TagKey<T> → tag, ValueKey<T1,T2> → value (extract T2), anything else → value
-                var namedType = fieldSymbol.Type as INamedTypeSymbol;
-                bool isAtomicEntities = namedType != null &&
-                    namedType.ContainingNamespace?.ToDisplayString() == "Atomic.Entities";
-
-                if (isAtomicEntities &&
-                    (namedType!.Name == "Tag" || namedType.Name == "TagKey"))
+                // Only ValueKey/TagKey from Atomic.Entities namespace are supported
+                if (fieldSymbol.Type is not INamedTypeSymbol namedType ||
+                    namedType.ContainingNamespace?.ToDisplayString() != "Atomic.Entities")
                 {
-                    tags.Add(new TagField(fieldName));
+                    continue;
                 }
-                else
+
+                bool fieldUnsafe = classUnsafe || HasUnsafeAttribute(fieldDecl);
+
+                switch (namedType.Name)
                 {
-                    bool fieldUnsafe = classUnsafe || HasUnsafeAttribute(fieldDecl);
-
-                    // ValueKey<TContext, TValue> → use the second generic argument as value type
-                    string valueTypeStr;
-                    if (isAtomicEntities &&
-                        namedType!.Name == "ValueKey" &&
-                        namedType.TypeArguments.Length >= 2)
+                    case "TagKey" when namedType.TypeArguments.Length == 1:
                     {
-                        valueTypeStr = namedType.TypeArguments[1].ToDisplayString();
-                    }
-                    else
-                    {
-                        valueTypeStr = fieldSymbol.Type.ToDisplayString();
+                        string entityTypeName = namedType.TypeArguments[0].ToDisplayString();
+                        tags.Add(new TagField(fieldName, entityTypeName));
+                        break;
                     }
 
-                    values.Add(new ValueField(fieldName, entityTypeName, valueTypeStr, fieldUnsafe));
+                    case "TagKey" when namedType.TypeArguments.Length == 0:
+                    {
+                        tags.Add(new TagField(fieldName, "Atomic.Entities.IEntity"));
+                        break;
+                    }
+
+                    case "ValueKey" when namedType.TypeArguments.Length == 2:
+                    {
+                        string entityTypeName = namedType.TypeArguments[0].ToDisplayString();
+                        string valueTypeName = namedType.TypeArguments[1].ToDisplayString();
+                        values.Add(new ValueField(fieldName, entityTypeName, valueTypeName, fieldUnsafe));
+                        break;
+                    }
+
+                    case "ValueKey" when namedType.TypeArguments.Length == 1:
+                    {
+                        string entityTypeName = "Atomic.Entities.IEntity";
+                        string valueTypeName = namedType.TypeArguments[0].ToDisplayString();
+                        values.Add(new ValueField(fieldName, entityTypeName, valueTypeName, fieldUnsafe));
+                        break;
+                    }
                 }
             }
 
             return new EntityAPIDefinition(
                 ns: ns,
                 className: classDecl.Identifier.Text,
-                entityTypeName: entityTypeName,
                 unsafeFlag: classUnsafe,
                 aggressiveInlining: classAggressiveInlining,
                 values: values.AsReadOnly(),
@@ -162,27 +168,6 @@ namespace EntityAPIGenerator
 
             result = null;
             return false;
-        }
-
-        private static bool TryExtractEntityType(AttributeData attribute, out string? entityTypeName)
-        {
-            entityTypeName = null;
-
-            if (attribute.ConstructorArguments.Length == 0)
-                return false;
-
-            var arg = attribute.ConstructorArguments[0];
-
-            // The constructor argument is a System.Type passed via typeof().
-            // In the semantic model this resolves to a ITypeSymbol.
-            if (arg.Kind != TypedConstantKind.Type)
-                return false;
-
-            if (arg.Value is not ITypeSymbol typeSymbol)
-                return false;
-
-            entityTypeName = typeSymbol.ToDisplayString();
-            return true;
         }
 
         private static bool TryGetNamedArgBool(AttributeData attribute, string argName)

@@ -17,12 +17,6 @@ namespace EntityAPIGenerator.Models
         public string ClassName { get; }
 
         /// <summary>
-        /// Entity interface name that generated extensions target,
-        /// e.g. <c>IPlayerContext</c>, <c>IGameEntity</c>.
-        /// </summary>
-        public string EntityTypeName { get; }
-
-        /// <summary>
         /// Class-level unsafe flag. When <c>true</c>, all value fields
         /// emit <c>GetValueUnsafe&lt;T&gt;</c> / <c>RefXxx()</c> unless
         /// overridden by a per-field <c>[Unsafe]</c>.
@@ -38,13 +32,12 @@ namespace EntityAPIGenerator.Models
         /// <summary>Value fields (from <c>ValueKey&lt;E,T&gt;</c> declarations).</summary>
         public IReadOnlyList<ValueField> Values { get; }
 
-        /// <summary>Tag fields (from <c>Tag</c> declarations).</summary>
+        /// <summary>Tag fields (from <c>TagKey&lt;E&gt;</c> declarations).</summary>
         public IReadOnlyList<TagField> Tags { get; }
 
         public EntityAPIDefinition(
             string ns,
             string className,
-            string entityTypeName,
             bool unsafeFlag,
             bool aggressiveInlining,
             IReadOnlyList<ValueField> values,
@@ -52,7 +45,6 @@ namespace EntityAPIGenerator.Models
         {
             Namespace = ns;
             ClassName = className;
-            EntityTypeName = entityTypeName;
             Unsafe = unsafeFlag;
             AggressiveInlining = aggressiveInlining;
             Values = values;
@@ -62,7 +54,6 @@ namespace EntityAPIGenerator.Models
         public bool Equals(EntityAPIDefinition other) =>
             Namespace == other.Namespace &&
             ClassName == other.ClassName &&
-            EntityTypeName == other.EntityTypeName &&
             Unsafe == other.Unsafe &&
             AggressiveInlining == other.AggressiveInlining &&
             SequenceEqual(Values, other.Values) &&
@@ -76,7 +67,6 @@ namespace EntityAPIGenerator.Models
             int hash = 17;
             hash = hash * 31 + (Namespace?.GetHashCode() ?? 0);
             hash = hash * 31 + (ClassName?.GetHashCode() ?? 0);
-            hash = hash * 31 + (EntityTypeName?.GetHashCode() ?? 0);
             hash = hash * 31 + Unsafe.GetHashCode();
             hash = hash * 31 + AggressiveInlining.GetHashCode();
             foreach (var v in Values) hash = hash * 31 + v.GetHashCode();

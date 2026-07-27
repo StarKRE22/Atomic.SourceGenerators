@@ -5,7 +5,7 @@ namespace EntityAPIGenerator
 {
     /// <summary>
     /// Produces C# source code from <see cref="EntityAPIDefinition"/> models.
-    /// Output matches the existing <c>.atomic</c> code generator's format.
+    /// Generated extension methods use the user-declared key's <c>Id</c> property directly.
     /// </summary>
     internal static class CodeEmitter
     {
@@ -26,14 +26,8 @@ namespace EntityAPIGenerator
 
             // Usings
             w.Line("using Atomic.Entities;");
-            w.Line("using static Atomic.Entities.EntityKeyStore;");
             if (def.AggressiveInlining)
                 w.Line("using System.Runtime.CompilerServices;");
-            w.Line("using UnityEngine;");
-            w.Line("using Atomic.Elements;");
-            w.Line("#if UNITY_EDITOR");
-            w.Line("using UnityEditor;");
-            w.Line("#endif");
 
             // Namespace
             bool hasNamespace = !string.IsNullOrEmpty(def.Namespace);
@@ -45,47 +39,15 @@ namespace EntityAPIGenerator
             }
 
             // Class declaration
-            w.Line("#if UNITY_EDITOR");
-            w.Line("[InitializeOnLoad]");
-            w.Line("#endif");
             w.Line($"public static partial class {def.ClassName}");
             w.Open();
-
-            // Static int keys — values
-            if (def.Values.Count > 0)
-            {
-                w.Line("///Values");
-                foreach (var value in def.Values)
-                    w.Line($"private static readonly int {value.Name}Key; // {value.ValueTypeName}");
-            }
-
-            // Static int keys — tags
-            if (def.Tags.Count > 0)
-            {
-                if (def.Values.Count > 0) w.Line();
-                w.Line("///Tags");
-                foreach (var tag in def.Tags)
-                    w.Line($"private static readonly int {tag.Name}Key;");
-            }
-
-            // Static constructor
-            w.Line();
-            w.Line($"static {def.ClassName}()");
-            w.Open();
-            foreach (var value in def.Values)
-                w.Line($"{value.Name}Key = NameToId(nameof({value.Name}));");
-            foreach (var tag in def.Tags)
-                w.Line($"{tag.Name}Key = NameToId(nameof({tag.Name}));");
-            w.Close();
-
-            w.Line();
 
             // Extension methods — values
             if (def.Values.Count > 0)
             {
                 w.Line("///Value Extensions");
                 foreach (var value in def.Values)
-                    EmitValueRegion(ref w, def.EntityTypeName, value, def.AggressiveInlining);
+                    EmitValueRegion(ref w, def.ClassName, value, def.AggressiveInlining);
             }
 
             // Extension methods — tags
@@ -94,7 +56,7 @@ namespace EntityAPIGenerator
                 if (def.Values.Count > 0) w.Line();
                 w.Line("///Tag Extensions");
                 foreach (var tag in def.Tags)
-                    EmitTagRegion(ref w, def.EntityTypeName, tag, def.AggressiveInlining);
+                    EmitTagRegion(ref w, def.ClassName, tag, def.AggressiveInlining);
             }
 
             w.Close(); // class
@@ -103,9 +65,10 @@ namespace EntityAPIGenerator
             return w.Result;
         }
 
-        static void EmitTagRegion(ref CodeWriter w, string entityTypeName, TagField tag, bool useInlining)
+        static void EmitTagRegion(ref CodeWriter w, string className, TagField tag, bool useInlining)
         {
-            string key = tag.Name + "Key";
+            string key = $"{className}.{tag.Name}.Id";
+            string entityTypeName = tag.EntityTypeName;
 
             w.Line();
             w.Line($"#region {tag.Name}");
@@ -129,13 +92,14 @@ namespace EntityAPIGenerator
             w.Line("#endregion");
         }
 
-        static void EmitValueRegion(ref CodeWriter w, string entityTypeName, ValueField value, bool useInlining)
+        static void EmitValueRegion(ref CodeWriter w, string className, ValueField value, bool useInlining)
         {
             bool isUnsafe = value.IsUnsafe;
             string getValueMethod = isUnsafe ? "GetValueUnsafe" : "GetValue";
             string tryGetMethod = isUnsafe ? "TryGetValueUnsafe" : "TryGetValue";
             string valueType = value.ValueTypeName;
-            string key = value.Name + "Key";
+            string key = $"{className}.{value.Name}.Id";
+            string entityTypeName = value.EntityTypeName;
 
             w.Line();
             w.Line($"#region {value.Name}");
