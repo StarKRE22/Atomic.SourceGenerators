@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>EntityAPIGenerator</AssemblyName>
+    <RootNamespace>EntityAPIGenerator</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Atomic.SourceGenerators.Shared\*.cs" Link="Shared\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- Auto-copy generator DLL and PDB to Unity plugin folder on build -->
+  <Target Name="CopyToUnity" AfterTargets="Build">
+    <PropertyGroup>
+      <_UnityPluginDir>$([MSBuild]::NormalizeDirectory('$(ProjectDir)..\..\Assets\Plugins\Atomic\SourceGenerators'))</_UnityPluginDir>
+    </PropertyGroup>
+    <Copy SourceFiles="$(TargetDir)$(TargetName).dll" DestinationFolder="$(_UnityPluginDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(_UnityPluginDir)" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    <Message Text="EntityAPIGenerator deployed to $(_UnityPluginDir)" Importance="high" />
+  </Target>
+
+</Project>

@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace EntityAPIGenerator
+namespace Atomic.SourceGenerators.Shared
 {
     /// <summary>
     /// Fluent code writer with automatic indentation and scope management.

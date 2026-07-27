@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using Atomic.SourceGenerators.Shared;
 using EntityAPIGenerator.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -83,7 +84,7 @@ namespace EntityAPIGenerator
                 foreach (var def in defs)
                 {
                     // Accumulate all diagnostics per definition; reports on scope exit
-                    using var logger = new DiagnosticLogger(sourceProductionContext, def.ClassName);
+                    using var logger = new DiagnosticLogger(sourceProductionContext, def.ClassName, Id);
 
                     try
                     {

@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace EntityAPIGenerator
+namespace Atomic.SourceGenerators.Shared
 {
     /// <summary>
     /// Helper for writing generated source files to <c>Temp/GeneratedCode/</c> for debugging/inspection.

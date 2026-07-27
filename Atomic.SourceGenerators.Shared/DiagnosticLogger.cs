@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
-namespace EntityAPIGenerator
+namespace Atomic.SourceGenerators.Shared
 {
     /// <summary>
-    /// Accumulates diagnostics for a single <c>[EntityAPI]</c> class definition
+    /// Accumulates diagnostics for a single generated class definition
     /// and reports them all on <see cref="Dispose"/>.
     /// Enriches each diagnostic with the class name as context.
     /// Mirrors Unity.Entities.SourceGen.Common.DiagnosticLogger approach.
@@ -14,12 +14,14 @@ namespace EntityAPIGenerator
     {
         readonly SourceProductionContext _context;
         readonly string _className;
-        readonly List<Diagnostic> _pending = new();
+        readonly string _category;
+        readonly List<Diagnostic> _pending = new List<Diagnostic>();
 
-        public DiagnosticLogger(SourceProductionContext context, string className)
+        public DiagnosticLogger(SourceProductionContext context, string className, string category)
         {
             _context = context;
             _className = className;
+            _category = category;
         }
 
         /// <summary>Log an error. Will be reported on Dispose().</summary>
@@ -40,7 +42,7 @@ namespace EntityAPIGenerator
             string enriched = $"[{_className}] {message}";
 
             var descriptor = new DiagnosticDescriptor(
-                code, title, enriched, "EntityAPIGenerator", severity, isEnabledByDefault: true);
+                code, title, enriched, _category, severity, isEnabledByDefault: true);
 
             _pending.Add(Diagnostic.Create(descriptor, location ?? Location.None));
         }

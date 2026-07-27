@@ -1,3 +1,4 @@
+using Atomic.SourceGenerators.Shared;
 using EntityAPIGenerator.Models;
 
 namespace EntityAPIGenerator
