@@ -7,6 +7,13 @@
     <NoWarn>$(NoWarn);RS2007;RS2008</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Workspaces reference is required for the CodeFixProvider.
+         ExcludeAssets="runtime" prevents bundling the workspace assemblies;
+         Roslyn provides them at runtime. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+
   <!-- Auto-copy analyzer DLL and PDB to Unity plugin folder on build -->
   <Target Name="CopyToUnity" AfterTargets="Build">
     <PropertyGroup>

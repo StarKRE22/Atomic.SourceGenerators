@@ -103,7 +103,7 @@ Assets/Plugins/Atomic/SourceGenerators/
 ## 📚 Generator-Specific Documentation
 
 - [EntityAPIGenerator README](EntityAPIGenerator/README.md) — usage of `[EntityAPI]`, generated tag/value extension methods, and Unity import settings.
-- [EntityAPIAnalyzer README](EntityAPIAnalyzer/README.md) — analyzer rules that validate `[EntityAPI]` class declarations.
+- [EntityAPIAnalyzer README](EntityAPIAnalyzer/README.md) — analyzer rules and code fixes for `[EntityAPI]` class declarations.
 
 ## ⚠️ Important Notes
 
