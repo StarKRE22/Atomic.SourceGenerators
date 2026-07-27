@@ -1,6 +1,6 @@
 # 🔬 Entity API Analyzer
 
-The **Entity API Analyzer** is a Roslyn diagnostic analyzer and code-fix provider that validates `[EntityAPI]` class declarations for the [Entity API Generator](EntityAPIGenerator.md).
+The **Entity API Analyzer** is a Roslyn diagnostic analyzer and code-fix provider that validates `[GenerateEntityExtensionsAPI]` class declarations for the [Entity API Generator](EntityAPIGenerator.md).
 
 It ensures every `ValueKey<>` and `TagKey<>` field is initialized with a valid, non-default constructor so that generated extension methods receive a correct `Id`.
 
@@ -22,7 +22,7 @@ It ensures every `ValueKey<>` and `TagKey<>` field is initialized with a valid, 
 
 The Entity API generator only accepts static fields of type `ValueKey<>` or `TagKey<>`. For the generated extension methods to work, each key must have a valid `Id`. This analyzer checks that every key field is initialized and never left with the default `0` id.
 
-The `[EntityAPI]` attribute is defined in [Atomic.Entities](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Entities/Scripts/Codegen/EntityAPIAttribute.cs).
+The `[GenerateEntityExtensionsAPI]` attribute is defined in [Atomic.Entities](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Entities/Scripts/Codegen/GenerateEntityExtensionsAPIAttribute.cs).
 
 ---
 
@@ -30,7 +30,7 @@ The `[EntityAPI]` attribute is defined in [Atomic.Entities](https://github.com/S
 
 | ID | Severity | Description |
 |---|---|---|
-| `EAPI0001` | Error | A `ValueKey<>` / `TagKey<>` field in an `[EntityAPI]` class has no initializer. |
+| `EAPI0001` | Error | A `ValueKey<>` / `TagKey<>` field in an `[GenerateEntityExtensionsAPI]` class has no initializer. |
 | `EAPI0002` | Error | A `ValueKey<>` / `TagKey<>` field is initialized with `new()` or `default`, which leaves the id at `0`. |
 
 ---
@@ -44,7 +44,7 @@ Both diagnostics ship with a quick fix (Ctrl+. or Alt+Enter in Rider/VS):
 ### Before
 
 ```csharp
-[EntityAPI]
+[GenerateEntityExtensionsAPI]
 public static partial class PlayerContextAPI
 {
     public static readonly ValueKey<IPlayerContext, int> Health;
@@ -55,7 +55,7 @@ public static partial class PlayerContextAPI
 ### After applying the code fix
 
 ```csharp
-[EntityAPI]
+[GenerateEntityExtensionsAPI]
 public static partial class PlayerContextAPI
 {
     public static readonly ValueKey<IPlayerContext, int> Health = new(nameof(Health));
@@ -70,7 +70,7 @@ public static partial class PlayerContextAPI
 ### Valid
 
 ```csharp
-[EntityAPI]
+[GenerateEntityExtensionsAPI]
 public static partial class PlayerContextAPI
 {
     public static readonly ValueKey<IPlayerContext, int> Health = new(nameof(Health));
@@ -82,7 +82,7 @@ public static partial class PlayerContextAPI
 ### Invalid
 
 ```csharp
-[EntityAPI]
+[GenerateEntityExtensionsAPI]
 public static partial class PlayerContextAPI
 {
     // EAPI0001: field is not initialized
@@ -112,7 +112,7 @@ For build, deploy, and Unity import instructions, see the shared [Setup.md](Setu
 
 ### False negatives
 
-- The analyzer only inspects **static** fields inside classes marked with `[EntityAPI]`.
+- The analyzer only inspects **static** fields inside classes marked with `[GenerateEntityExtensionsAPI]`.
 - It only checks fields whose type is `ValueKey<>` or `TagKey<>` from the `Atomic.Entities` namespace.
 
 ---
@@ -121,6 +121,6 @@ For build, deploy, and Unity import instructions, see the shared [Setup.md](Setu
 
 - Targets `netstandard2.0` and `Microsoft.CodeAnalysis.CSharp` **4.3.0** for Unity 6000 compatibility.
 - Uses `RegisterSyntaxNodeAction` on `FieldDeclarationSyntax`.
-- Only analyzes static fields inside classes marked with `[EntityAPI]`.
+- Only analyzes static fields inside classes marked with `[GenerateEntityExtensionsAPI]`.
 - Only checks fields whose type is `ValueKey<>` or `TagKey<>` from the `Atomic.Entities` namespace.
 - For more details, see [Implementation.md](Implementation.md).

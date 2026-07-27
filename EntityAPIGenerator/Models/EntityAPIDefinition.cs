@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace EntityAPIGenerator.Models
 {
     /// <summary>
-    /// Describes a single class decorated with <c>[EntityAPI]</c>,
+    /// Describes a single class decorated with <c>[GenerateEntityExtensionsAPI]</c>,
     /// including all value and tag fields to be generated.
     /// Implements <see cref="IEquatable{T}"/> for incremental caching.
     /// </summary>

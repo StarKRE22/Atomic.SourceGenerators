@@ -2,7 +2,7 @@
 
 Roslyn incremental source generators and analyzers for the [Atomic](https://github.com/StarKRE22/Atomic) framework.
 
-They turn declarative `[EntityAPI]` and `[EventAPI]` classes into strongly-typed extension methods at compile time, eliminating magic strings and manual boilerplate in Unity projects.
+They turn declarative `[GenerateEntityExtensionsAPI]` and `[GenerateEventExtensionsAPI]` classes into strongly-typed extension methods at compile time, eliminating magic strings and manual boilerplate in Unity projects.
 
 ---
 
@@ -39,7 +39,7 @@ They turn declarative `[EntityAPI]` and `[EventAPI]` classes into strongly-typed
 4. Declare an API class and compile:
 
    ```csharp
-   [EntityAPI]
+   [GenerateEntityExtensionsAPI]
    public static partial class PlayerAPI
    {
        public static readonly ValueKey<IEntity, int> Health = new(nameof(Health));
@@ -59,7 +59,7 @@ For full details, see [Docs/Setup.md](Docs/Setup.md).
 
 - **Unity 6** (6000.0 LTS or newer) with source-generator support
 - **.NET SDK 8+** or **.NET 7+** to build the generators
-- A Unity project that references the [Atomic.Entities](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Entities/Scripts/Codegen/EntityAPIAttribute.cs) and/or [Atomic.Events](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Events/Scripts/CodeGen/EventAPIAttribute.cs) runtime assemblies
+- A Unity project that references the [Atomic.Entities](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Entities/Scripts/Codegen/GenerateEntityExtensionsAPIAttribute.cs) and/or [Atomic.Events](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Events/Scripts/CodeGen/GenerateEventExtensionsAPIAttribute.cs) runtime assemblies
 
 ---
 
@@ -68,10 +68,10 @@ For full details, see [Docs/Setup.md](Docs/Setup.md).
 | Document | Description |
 |---|---|
 | [Docs/Setup.md](Docs/Setup.md) | Build, deploy, and Unity import settings for all generators and analyzers |
-| [Docs/EntityAPIGenerator.md](Docs/EntityAPIGenerator.md) | `[EntityAPI]` source generator: tags, values, unsafe mode, configuration |
-| [Docs/EventAPIGenerator.md](Docs/EventAPIGenerator.md) | `[EventAPI]` source generator: event-bus extension methods |
-| [Docs/EntityAPIAnalyzer.md](Docs/EntityAPIAnalyzer.md) | Analyzer rules and code fixes for `[EntityAPI]` declarations |
-| [Docs/EventAPIAnalyzer.md](Docs/EventAPIAnalyzer.md) | Analyzer rules and code fixes for `[EventAPI]` declarations |
+| [Docs/EntityAPIGenerator.md](Docs/EntityAPIGenerator.md) | `[GenerateEntityExtensionsAPI]` source generator: tags, values, unsafe mode, configuration |
+| [Docs/EventAPIGenerator.md](Docs/EventAPIGenerator.md) | `[GenerateEventExtensionsAPI]` source generator: event-bus extension methods |
+| [Docs/EntityAPIAnalyzer.md](Docs/EntityAPIAnalyzer.md) | Analyzer rules and code fixes for `[GenerateEntityExtensionsAPI]` declarations |
+| [Docs/EventAPIAnalyzer.md](Docs/EventAPIAnalyzer.md) | Analyzer rules and code fixes for `[GenerateEventExtensionsAPI]` declarations |
 | [Docs/Implementation.md](Docs/Implementation.md) | Solution structure, shared-source model, Roslyn 4.3.0 notes, and how to add a new generator |
 
 ---
@@ -80,10 +80,10 @@ For full details, see [Docs/Setup.md](Docs/Setup.md).
 
 ### Entity API
 
-From a `[EntityAPI]` class:
+From a `[GenerateEntityExtensionsAPI]` class:
 
 ```csharp
-[EntityAPI]
+[GenerateEntityExtensionsAPI]
 public static partial class PlayerAPI
 {
     public static readonly TagKey<IEntity> Alive = new(nameof(Alive));
@@ -103,10 +103,10 @@ entity.HasAliveTag();
 
 ### Event API
 
-From an `[EventAPI]` class:
+From an `[GenerateEventExtensionsAPI]` class:
 
 ```csharp
-[EventAPI]
+[GenerateEventExtensionsAPI]
 public static partial class GameEventAPI
 {
     public static readonly EventKey<IEventBus> GameStarted = new(nameof(GameStarted));
@@ -127,9 +127,9 @@ bus.InvokeGameStarted();
 - The generator and analyzer DLLs are **compile-time only** and must not be included in player builds.
 - In Unity, all DLLs must have the **RoslynAnalyzer** asset label and **all platforms unchecked**.
 - Unity 6000 bundles **Roslyn 4.3.0**, so the generators use `SyntaxProvider.CreateSyntaxProvider` instead of newer APIs such as `ForAttributeWithMetadataName`.
-- Marker attributes (`[EntityAPI]`, `[EventAPI]`) live in the runtime assemblies:
-  - [EntityAPIAttribute.cs](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Entities/Scripts/Codegen/EntityAPIAttribute.cs)
-  - [EventAPIAttribute.cs](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Events/Scripts/CodeGen/EventAPIAttribute.cs)
+- Marker attributes (`[GenerateEntityExtensionsAPI]`, `[GenerateEventExtensionsAPI]`) live in the runtime assemblies:
+  - [GenerateEntityExtensionsAPIAttribute.cs](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Entities/Scripts/Codegen/GenerateEntityExtensionsAPIAttribute.cs)
+  - [GenerateEventExtensionsAPIAttribute.cs](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Events/Scripts/CodeGen/GenerateEventExtensionsAPIAttribute.cs)
 
 ---
 

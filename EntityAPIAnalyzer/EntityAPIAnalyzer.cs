@@ -9,14 +9,14 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace EntityAPIAnalyzer
 {
     /// <summary>
-    /// Reports diagnostics for <c>[EntityAPI]</c> class declarations.
+    /// Reports diagnostics for <c>[GenerateEntityExtensionsAPI]</c> class declarations.
     /// Currently validates that <c>ValueKey&lt;&gt;</c> and <c>TagKey&lt;&gt;</c> fields
     /// are properly initialized.
     /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class EntityAPIAnalyzer : DiagnosticAnalyzer
     {
-        private const string EntityAPIAttributeName = "EntityAPI";
+        private const string EntityAPIAttributeName = "GenerateEntityExtensionsAPI";
         private const string ValueKeyTypeName = "ValueKey";
         private const string TagKeyTypeName = "TagKey";
         private const string AtomicEntitiesNamespace = "Atomic.Entities";
@@ -41,7 +41,7 @@ namespace EntityAPIAnalyzer
             if (!fieldDecl.Modifiers.Any(SyntaxKind.StaticKeyword))
                 return;
 
-            // Only fields inside [EntityAPI] classes
+            // Only fields inside [GenerateEntityExtensionsAPI] classes
             if (fieldDecl.Parent is not ClassDeclarationSyntax classDecl)
                 return;
 

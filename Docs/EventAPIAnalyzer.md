@@ -1,6 +1,6 @@
 # 🔬 Event API Analyzer
 
-The **Event API Analyzer** is a Roslyn diagnostic analyzer and code-fix provider that validates `[EventAPI]` class declarations for the [Event API Generator](EventAPIGenerator.md).
+The **Event API Analyzer** is a Roslyn diagnostic analyzer and code-fix provider that validates `[GenerateEventExtensionsAPI]` class declarations for the [Event API Generator](EventAPIGenerator.md).
 
 It ensures every `EventKey<>` field is initialized with a valid, non-default constructor so that generated event-bus extension methods receive a correct `Id`.
 
@@ -22,7 +22,7 @@ It ensures every `EventKey<>` field is initialized with a valid, non-default con
 
 The Event API generator only accepts static fields of type `EventKey<>` from the `Atomic.Events` namespace. For the generated extension methods to work, each key must have a valid `Id`. This analyzer checks that every event key field is initialized and never left with the default `0` id.
 
-The `[EventAPI]` attribute is defined in [Atomic.Events](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Events/Scripts/CodeGen/EventAPIAttribute.cs).
+The `[GenerateEventExtensionsAPI]` attribute is defined in [Atomic.Events](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Events/Scripts/CodeGen/GenerateEventExtensionsAPIAttribute.cs).
 
 ---
 
@@ -30,7 +30,7 @@ The `[EventAPI]` attribute is defined in [Atomic.Events](https://github.com/Star
 
 | ID | Severity | Description |
 |---|---|---|
-| `EAPI0001` | Error | An `EventKey<>` field in an `[EventAPI]` class has no initializer. |
+| `EAPI0001` | Error | An `EventKey<>` field in an `[GenerateEventExtensionsAPI]` class has no initializer. |
 | `EAPI0002` | Error | An `EventKey<>` field is initialized with `new()` or `default`, which leaves the id at `0`. |
 
 ---
@@ -44,7 +44,7 @@ Both diagnostics ship with a quick fix (Ctrl+. or Alt+Enter in Rider/VS):
 ### Before
 
 ```csharp
-[EventAPI]
+[GenerateEventExtensionsAPI]
 public static partial class GameEventAPI
 {
     public static readonly EventKey<IEventBus> PlayerTurnStarted;
@@ -55,7 +55,7 @@ public static partial class GameEventAPI
 ### After applying the code fix
 
 ```csharp
-[EventAPI]
+[GenerateEventExtensionsAPI]
 public static partial class GameEventAPI
 {
     public static readonly EventKey<IEventBus> PlayerTurnStarted = new(nameof(PlayerTurnStarted));
@@ -70,7 +70,7 @@ public static partial class GameEventAPI
 ### Valid
 
 ```csharp
-[EventAPI]
+[GenerateEventExtensionsAPI]
 public static partial class GameEventAPI
 {
     public static readonly EventKey<IEventBus> GameStarted = new(nameof(GameStarted));
@@ -81,7 +81,7 @@ public static partial class GameEventAPI
 ### Invalid
 
 ```csharp
-[EventAPI]
+[GenerateEventExtensionsAPI]
 public static partial class GameEventAPI
 {
     // EAPI0001: field is not initialized
@@ -111,7 +111,7 @@ For build, deploy, and Unity import instructions, see the shared [Setup.md](Setu
 
 ### False negatives
 
-- The analyzer only inspects **static** fields inside classes marked with `[EventAPI]`.
+- The analyzer only inspects **static** fields inside classes marked with `[GenerateEventExtensionsAPI]`.
 - It only checks fields whose type is `EventKey<>` from the `Atomic.Events` namespace.
 
 ---
@@ -120,6 +120,6 @@ For build, deploy, and Unity import instructions, see the shared [Setup.md](Setu
 
 - Targets `netstandard2.0` and `Microsoft.CodeAnalysis.CSharp` **4.3.0** for Unity 6000 compatibility.
 - Uses `RegisterSyntaxNodeAction` on `FieldDeclarationSyntax`.
-- Only analyzes static fields inside classes marked with `[EventAPI]`.
+- Only analyzes static fields inside classes marked with `[GenerateEventExtensionsAPI]`.
 - Only checks fields whose type is `EventKey<>` from the `Atomic.Events` namespace.
 - For more details, see [Implementation.md](Implementation.md).

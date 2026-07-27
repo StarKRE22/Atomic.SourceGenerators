@@ -9,13 +9,13 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace EventAPIAnalyzer
 {
     /// <summary>
-    /// Reports diagnostics for <c>[EventAPI]</c> class declarations.
+    /// Reports diagnostics for <c>[GenerateEventExtensionsAPI]</c> class declarations.
     /// Currently validates that <c>EventKey&lt;&gt;</c> fields are properly initialized.
     /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public sealed class EventAPIAnalyzer : DiagnosticAnalyzer
     {
-        private const string EventAPIAttributeName = "EventAPI";
+        private const string EventAPIAttributeName = "GenerateEventExtensionsAPI";
         private const string EventKeyTypeName = "EventKey";
         private const string AtomicEventsNamespace = "Atomic.Events";
 
@@ -39,7 +39,7 @@ namespace EventAPIAnalyzer
             if (!fieldDecl.Modifiers.Any(SyntaxKind.StaticKeyword))
                 return;
 
-            // Only fields inside [EventAPI] classes
+            // Only fields inside [GenerateEventExtensionsAPI] classes
             if (fieldDecl.Parent is not ClassDeclarationSyntax classDecl)
                 return;
 

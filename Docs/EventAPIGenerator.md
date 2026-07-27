@@ -1,6 +1,6 @@
 # 🧩 Event API Source Generator
 
-The **Event API Source Generator** is a Roslyn incremental source generator that reads `[EventAPI]`-marked static classes and emits strongly-typed extension methods for [Atomic.Events](https://github.com/StarKRE22/Atomic) event buses.
+The **Event API Source Generator** is a Roslyn incremental source generator that reads `[GenerateEventExtensionsAPI]`-marked static classes and emits strongly-typed extension methods for [Atomic.Events](https://github.com/StarKRE22/Atomic) event buses.
 
 It turns `EventKey<>` declarations into `Subscribe`, `Unsubscribe`, `Invoke`, `IsSubscribed`, and `Dispose` methods that are bound to the bus type declared in each key.
 
@@ -24,7 +24,7 @@ It turns `EventKey<>` declarations into `Subscribe`, `Unsubscribe`, `Invoke`, `I
 
 - **Unity 6** (6000.0 LTS or newer) with source-generator support
 - The **EventAPIGenerator.dll** analyzer added to your Unity project (see [Setup.md](Setup.md))
-- The `[EventAPI]` attribute from [Atomic.Events](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Events/Scripts/CodeGen/EventAPIAttribute.cs)
+- The `[GenerateEventExtensionsAPI]` attribute from [Atomic.Events](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Events/Scripts/CodeGen/GenerateEventExtensionsAPIAttribute.cs)
 
 ---
 
@@ -36,14 +36,14 @@ For build, deploy, and Unity import instructions, see the shared [Setup.md](Setu
 
 ## 🧩 Basic Usage
 
-Declare a static `partial` class, mark it with `[EventAPI]`, and add static readonly fields of type `EventKey<TBus>` or `EventKey<TBus, T...>`:
+Declare a static `partial` class, mark it with `[GenerateEventExtensionsAPI]`, and add static readonly fields of type `EventKey<TBus>` or `EventKey<TBus, T...>`:
 
 ```csharp
 using Atomic.Events;
 
 namespace Game.Gameplay
 {
-    [EventAPI]
+    [GenerateEventExtensionsAPI]
     public static partial class GameEventAPI
     {
         public static readonly EventKey<IEventBus> PlayerTurnStarted = new(nameof(PlayerTurnStarted));
@@ -124,13 +124,13 @@ public static partial class GameEventAPI
 
 ## ⚙️ Configuration
 
-### `[EventAPI]`
+### `[GenerateEventExtensionsAPI]`
 
-The `[EventAPI]` attribute is parameterless. A class must be:
+The `[GenerateEventExtensionsAPI]` attribute is parameterless. A class must be:
 
 - `static`
 - declared `partial`
-- decorated with `[EventAPI]`
+- decorated with `[GenerateEventExtensionsAPI]`
 
 Each field must be a static `EventKey<>` initialized with a non-default constructor:
 
@@ -142,7 +142,7 @@ public static readonly EventKey<IEventBus> GameStarted = new(nameof(GameStarted)
 
 ## 🔬 Analyzer
 
-Deploy the [Event API Analyzer](EventAPIAnalyzer.md) alongside the generator. It reports errors when `EventKey<>` fields inside `[EventAPI]` classes are missing an initializer or are initialized with `new()` / `default`.
+Deploy the [Event API Analyzer](EventAPIAnalyzer.md) alongside the generator. It reports errors when `EventKey<>` fields inside `[GenerateEventExtensionsAPI]` classes are missing an initializer or are initialized with `new()` / `default`.
 
 ---
 
@@ -158,7 +158,7 @@ Deploy the [Event API Analyzer](EventAPIAnalyzer.md) alongside the generator. It
 ### Build errors after adding the DLL
 
 - Ensure the DLL is **not** included in any runtime platform.
-- Ensure all `[EventAPI]` fields are `EventKey<>` and are initialized (e.g. `new(nameof(Field))`).
+- Ensure all `[GenerateEventExtensionsAPI]` fields are `EventKey<>` and are initialized (e.g. `new(nameof(Field))`).
 
 ### Generated file is not written to disk
 
@@ -170,6 +170,6 @@ The generator produces source **in-memory**. To write generated files to disk, d
 
 - Targets `netstandard2.0` and `Microsoft.CodeAnalysis.CSharp` **4.3.0** for Unity 6000 compatibility.
 - Uses `SyntaxProvider.CreateSyntaxProvider` instead of `ForAttributeWithMetadataName` because Unity 6000 ships Roslyn 4.3.0.
-- Reads the `[EventAPI]` attribute from the `Atomic.Events` assembly.
+- Reads the `[GenerateEventExtensionsAPI]` attribute from the `Atomic.Events` assembly.
 - Skips IDE analysis and runs only during actual builds.
 - For more details, see [Implementation.md](Implementation.md).

@@ -16,7 +16,7 @@ namespace EventAPIAnalyzer
             category: "Atomic.Events",
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true,
-            description: "EventKey fields in [EventAPI] classes must be initialized so their Id is computed before use.");
+            description: "EventKey fields in [GenerateEventExtensionsAPI] classes must be initialized so their Id is computed before use.");
 
         public const string ParameterlessConstructorId = "EAPI0002";
 

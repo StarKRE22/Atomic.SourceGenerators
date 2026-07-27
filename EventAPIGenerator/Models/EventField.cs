@@ -5,7 +5,7 @@ namespace EventAPIGenerator.Models
 {
     /// <summary>
     /// Represents an <c>EventKey&lt;TBus&gt;</c> or <c>EventKey&lt;TBus, T...&gt;</c>
-    /// static field parsed from an <c>[EventAPI]</c> class.
+    /// static field parsed from an <c>[GenerateEventExtensionsAPI]</c> class.
     /// </summary>
     public readonly struct EventField : IEquatable<EventField>
     {

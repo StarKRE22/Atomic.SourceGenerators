@@ -1,6 +1,6 @@
 # 🧩 Entity API Source Generator
 
-The **Entity API Source Generator** is a Roslyn incremental source generator that reads `[EntityAPI]`-marked static classes and emits strongly-typed extension methods for [Atomic.Entities](https://github.com/StarKRE22/Atomic) tags and values.
+The **Entity API Source Generator** is a Roslyn incremental source generator that reads `[GenerateEntityExtensionsAPI]`-marked static classes and emits strongly-typed extension methods for [Atomic.Entities](https://github.com/StarKRE22/Atomic) tags and values.
 
 It replaces the legacy `.atomic` YAML or IDE-plugin workflows: add the DLL, declare keys in a `partial` static class, and the extension methods appear on the next build.
 
@@ -27,7 +27,7 @@ It replaces the legacy `.atomic` YAML or IDE-plugin workflows: add the DLL, decl
 
 - **Unity 6** (6000.0 LTS or newer) with source-generator support
 - The **EntityAPIGenerator.dll** analyzer added to your Unity project (see [Setup.md](Setup.md))
-- The `[EntityAPI]` attribute from [Atomic.Entities](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Entities/Scripts/Codegen/EntityAPIAttribute.cs)
+- The `[GenerateEntityExtensionsAPI]` attribute from [Atomic.Entities](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Entities/Scripts/Codegen/GenerateEntityExtensionsAPIAttribute.cs)
 
 ---
 
@@ -41,13 +41,13 @@ For build, deploy, and Unity import instructions, see the shared [Setup.md](Setu
 
 ### Declaring an API Definition
 
-Create a `public static partial` class, mark it with `[EntityAPI]`, and add static readonly fields of type `ValueKey<>` or `TagKey<>`:
+Create a `public static partial` class, mark it with `[GenerateEntityExtensionsAPI]`, and add static readonly fields of type `ValueKey<>` or `TagKey<>`:
 
 ```csharp
 using Atomic.Entities;
 using UnityEngine;
 
-[EntityAPI]
+[GenerateEntityExtensionsAPI]
 public static partial class PlayerAPI
 {
     public static readonly TagKey<IEntity> Alive = new(nameof(Alive));
@@ -107,12 +107,12 @@ Camera cam = context.GetCamera();
 
 ## 🔍 Generated Code
 
-For each `[EntityAPI]` class the generator emits a matching `partial` class with the same name and namespace. You do **not** edit this file.
+For each `[GenerateEntityExtensionsAPI]` class the generator emits a matching `partial` class with the same name and namespace. You do **not** edit this file.
 
 ### Example input
 
 ```csharp
-[EntityAPI]
+[GenerateEntityExtensionsAPI]
 public static partial class PlayerAPI
 {
     public static readonly TagKey<IEntity> Alive = new(nameof(Alive));
@@ -190,14 +190,14 @@ For every `ValueKey<TContext, TValue>` / `ValueKey<TValue>` field the generator 
 
 ## ⚙️ Configuration
 
-### `[EntityAPI]`
+### `[GenerateEntityExtensionsAPI]`
 
 | Property | Type | Default | Description |
 |---|---|---|---|
 | `Unsafe` | `bool` | `false` | When `true`, uses unsafe value accessors and emits `Ref{Name}` methods. |
 | `AggressiveInlining` | `bool` | `true` | When `true`, adds `MethodImpl(MethodImplOptions.AggressiveInlining)` to every method. |
 
-The entity type is no longer passed to `[EntityAPI]`. It is read from each field's first generic argument.
+The entity type is no longer passed to `[GenerateEntityExtensionsAPI]`. It is read from each field's first generic argument.
 
 ### `[Unsafe]`
 
@@ -210,7 +210,7 @@ The entity type is no longer passed to `[EntityAPI]`. It is read from each field
 Enable unsafe accessors for the whole class:
 
 ```csharp
-[EntityAPI(Unsafe = true)]
+[GenerateEntityExtensionsAPI(Unsafe = true)]
 public static partial class PlayerAPI
 {
     public static readonly ValueKey<IEntity, int> Health = new(nameof(Health));
@@ -237,7 +237,7 @@ public static ref int RefHealth(this IEntity entity) =>
 You can mix modes by applying `[Unsafe(false)]` to individual fields:
 
 ```csharp
-[EntityAPI(Unsafe = true)]
+[GenerateEntityExtensionsAPI(Unsafe = true)]
 public static partial class MixedAPI
 {
     public static readonly ValueKey<IEntity, int> Health = new(nameof(Health));      // unsafe
@@ -251,7 +251,7 @@ public static partial class MixedAPI
 
 ## 🔬 Analyzer
 
-Deploy the [Entity API Analyzer](EntityAPIAnalyzer.md) alongside the generator. It reports build errors when `ValueKey<>` / `TagKey<>` fields inside `[EntityAPI]` classes are missing an initializer or are initialized with `new()` / `default`.
+Deploy the [Entity API Analyzer](EntityAPIAnalyzer.md) alongside the generator. It reports build errors when `ValueKey<>` / `TagKey<>` fields inside `[GenerateEntityExtensionsAPI]` classes are missing an initializer or are initialized with `new()` / `default`.
 
 ---
 
@@ -267,7 +267,7 @@ Deploy the [Entity API Analyzer](EntityAPIAnalyzer.md) alongside the generator. 
 ### Build errors after adding the DLL
 
 - Ensure the DLL is **not** included in any runtime platform.
-- Ensure all `[EntityAPI]` fields are `ValueKey<>` or `TagKey<>` and are initialized (e.g. `new(nameof(Field))`).
+- Ensure all `[GenerateEntityExtensionsAPI]` fields are `ValueKey<>` or `TagKey<>` and are initialized (e.g. `new(nameof(Field))`).
 
 ### Generated file is not written to disk
 
@@ -279,6 +279,6 @@ The generator produces source **in-memory**. To write generated files to disk, d
 
 - Targets `netstandard2.0` and `Microsoft.CodeAnalysis.CSharp` **4.3.0** for Unity 6000 compatibility.
 - Uses `SyntaxProvider.CreateSyntaxProvider` instead of `ForAttributeWithMetadataName` because Unity 6000 ships Roslyn 4.3.0.
-- Reads the `[EntityAPI]` attribute from the `Atomic.Entities` assembly.
+- Reads the `[GenerateEntityExtensionsAPI]` attribute from the `Atomic.Entities` assembly.
 - Skips IDE analysis and runs only during actual builds.
 - For more details, see [Implementation.md](Implementation.md).

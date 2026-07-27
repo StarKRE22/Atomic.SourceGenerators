@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace EntityAPIGenerator
 {
     /// <summary>
-    /// Incremental source generator that reads <c>[EntityAPI]</c>-marked classes
+    /// Incremental source generator that reads <c>[GenerateEntityExtensionsAPI]</c>-marked classes
     /// and generates extension methods for Atomic entity value keys and tags.
     /// </summary>
     [Generator]
@@ -18,7 +18,7 @@ namespace EntityAPIGenerator
         public const string Id = "EntityAPIGenerator";
 
         /// <summary>
-        /// Name of the assembly that defines <c>[EntityAPI]</c> attribute.
+        /// Name of the assembly that defines <c>[GenerateEntityExtensionsAPI]</c> attribute.
         /// </summary>
         internal static readonly string CodegenAssemblyName = "Atomic.Entities";
 
@@ -40,11 +40,11 @@ namespace EntityAPIGenerator
             if (!IsBuildTime)
                 return false;
 
-            // Skip the Atomic.Entities assembly itself (it only defines [EntityAPI], doesn't use it)
+            // Skip the Atomic.Entities assembly itself (it only defines [GenerateEntityExtensionsAPI], doesn't use it)
             if (compilation.Assembly.Name == CodegenAssemblyName)
                 return false;
 
-            // Only run if the compilation references Atomic.Entities (can use [EntityAPI])
+            // Only run if the compilation references Atomic.Entities (can use [GenerateEntityExtensionsAPI])
             return compilation.ReferencedAssemblyNames.Any(n => n.Name == CodegenAssemblyName);
         }
 
@@ -60,7 +60,7 @@ namespace EntityAPIGenerator
 
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
-            // Step 1: Find all candidate classes with [EntityAPI] attribute
+            // Step 1: Find all candidate classes with [GenerateEntityExtensionsAPI] attribute
             // Uses CreateSyntaxProvider for Unity 6000 (Roslyn 4.3.0) compatibility.
             var pipeline = context.SyntaxProvider.CreateSyntaxProvider(
                 predicate: (node, _) => EntityAPIParser.IsCandidate(node),
@@ -84,13 +84,13 @@ namespace EntityAPIGenerator
                 // Setup debug output (reads ATOMIC_OUTPUT_SOURCEGEN_FILES define)
                 SourceOutputHelpers.Setup(parseOptions);
 
-                // Early bail-out if this compilation can't have [EntityAPI] classes
+                // Early bail-out if this compilation can't have [GenerateEntityExtensionsAPI] classes
                 if (!ShouldRun(compilation))
                     return;
 
                 var assemblyName = compilation.Assembly.Name;
 
-                // ── Process class-level [EntityAPI] definitions ──
+                // ── Process class-level [GenerateEntityExtensionsAPI] definitions ──
                 foreach (var def in defs)
                 {
                     // Accumulate all diagnostics per definition; reports on scope exit

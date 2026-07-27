@@ -16,7 +16,7 @@ namespace EntityAPIAnalyzer
             category: "Atomic.Entities",
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true,
-            description: "ValueKey/TagKey fields in [EntityAPI] classes must be initialized so their Id is computed before use.");
+            description: "ValueKey/TagKey fields in [GenerateEntityExtensionsAPI] classes must be initialized so their Id is computed before use.");
 
         public const string ParameterlessConstructorId = "EAPI0002";
 

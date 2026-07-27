@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace EventAPIGenerator.Models
 {
     /// <summary>
-    /// Describes a single class decorated with <c>[EventAPI]</c>,
+    /// Describes a single class decorated with <c>[GenerateEventExtensionsAPI]</c>,
     /// including all event key fields to be generated.
     /// Implements <see cref="IEquatable{T}"/> for incremental caching.
     /// </summary>

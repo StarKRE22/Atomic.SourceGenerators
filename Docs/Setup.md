@@ -29,8 +29,8 @@ The same steps apply to all four assemblies:
 - **Unity 6** (6000.0 LTS or newer) with bundled Roslyn source-generator support
 - **.NET SDK 8+** or **.NET 7+** to build the generators
 - A Unity project that references the **Atomic.Entities** and/or **Atomic.Events** runtime assemblies
-  - The `[EntityAPI]` attribute is defined in the [Atomic.Entities](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Entities/Scripts/Codegen/EntityAPIAttribute.cs) runtime assembly.
-  - The `[EventAPI]` attribute is defined in the [Atomic.Events](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Events/Scripts/CodeGen/EventAPIAttribute.cs) runtime assembly.
+  - The `[GenerateEntityExtensionsAPI]` attribute is defined in the [Atomic.Entities](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Entities/Scripts/Codegen/GenerateEntityExtensionsAPIAttribute.cs) runtime assembly.
+  - The `[GenerateEventExtensionsAPI]` attribute is defined in the [Atomic.Events](https://github.com/StarKRE22/Atomic/blob/main/Assets/Plugins/Atomic/Events/Scripts/CodeGen/GenerateEventExtensionsAPIAttribute.cs) runtime assembly.
 
 ---
 
@@ -115,7 +115,7 @@ Create a test file in your Unity project and build:
 ```csharp
 using Atomic.Entities;
 
-[EntityAPI]
+[GenerateEntityExtensionsAPI]
 public static partial class TestAPI
 {
     public static readonly ValueKey<IEntity, int> Health = new(nameof(Health));
@@ -135,7 +135,7 @@ For event generators, test with:
 ```csharp
 using Atomic.Events;
 
-[EventAPI]
+[GenerateEventExtensionsAPI]
 public static partial class TestEventAPI
 {
     public static readonly EventKey<IEventBus> GameStarted = new(nameof(GameStarted));
@@ -162,7 +162,7 @@ bus.InvokeGameStarted();
 ### Build errors after adding the DLLs
 
 - Make sure the DLLs are **not** included in any runtime platform.
-- Make sure every `[EntityAPI]` / `[EventAPI]` field is initialized with a non-default constructor, e.g. `new(nameof(FieldName))`. The analyzers report missing or invalid initializers.
+- Make sure every `[GenerateEntityExtensionsAPI]` / `[GenerateEventExtensionsAPI]` field is initialized with a non-default constructor, e.g. `new(nameof(FieldName))`. The analyzers report missing or invalid initializers.
 
 ### Inspect generated source
 

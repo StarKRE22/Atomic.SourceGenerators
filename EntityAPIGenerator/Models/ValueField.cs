@@ -3,7 +3,7 @@ using System;
 namespace EntityAPIGenerator.Models
 {
     /// <summary>
-    /// Represents a <c>ValueKey&lt;E, T&gt;</c> field parsed from an <c>[EntityAPI]</c> class.
+    /// Represents a <c>ValueKey&lt;E, T&gt;</c> field parsed from an <c>[GenerateEntityExtensionsAPI]</c> class.
     /// </summary>
     public readonly struct ValueField : IEquatable<ValueField>
     {

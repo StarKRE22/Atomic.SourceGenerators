@@ -3,7 +3,7 @@ using System;
 namespace EntityAPIGenerator.Models
 {
     /// <summary>
-    /// Represents a <c>TagKey&lt;E&gt;</c> static field parsed from an <c>[EntityAPI]</c> class,
+    /// Represents a <c>TagKey&lt;E&gt;</c> static field parsed from an <c>[GenerateEntityExtensionsAPI]</c> class,
     /// used to generate <c>HasXxxTag</c>, <c>AddXxxTag</c>, <c>DelXxxTag</c> extension methods.
     /// </summary>
     public readonly struct TagField : IEquatable<TagField>
