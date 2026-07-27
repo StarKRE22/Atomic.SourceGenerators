@@ -97,7 +97,7 @@ This keeps every generator DLL self-contained and avoids analyzer dependency iss
 
 Generator projects only define their own `AssemblyName`, `RootNamespace`, shared-source include, and `CopyToUnity` target.
 
-## 🚀 Build and Deploy
+## 🚀 Build
 
 From the `SourceGenerators` directory:
 
@@ -105,11 +105,15 @@ From the `SourceGenerators` directory:
 dotnet build Atomic.SourceGenerators.sln -c Release
 ```
 
-Each generator project auto-deploys its DLL and PDB to:
+By default, DLLs are **not** copied to the Unity project. To deploy them, provide the plugin folder explicitly:
 
+```bash
+dotnet build Atomic.SourceGenerators.sln -c Release \
+  -p:AtomicDeployToUnity=true \
+  -p:AtomicUnityPluginDir="C:\YourProject\Assets\Plugins\Atomic\SourceGenerators"
 ```
-Assets/Plugins/Atomic/SourceGenerators/
-```
+
+Only `.dll` files are copied (PDBs are not deployed).
 
 ## 📚 Generator-Specific Documentation
 

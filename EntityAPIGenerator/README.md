@@ -55,11 +55,15 @@ The compiled assembly is produced at:
 EntityAPIGenerator/bin/Release/netstandard2.0/EntityAPIGenerator.dll
 ```
 
-The build also auto-copies the DLL to:
+To copy it to your Unity project automatically, provide the destination folder:
 
+```bash
+dotnet build Atomic.SourceGenerators.sln -c Release \
+  -p:AtomicDeployToUnity=true \
+  -p:AtomicUnityPluginDir="C:\YourProject\Assets\Plugins\Atomic\SourceGenerators"
 ```
-Assets/Plugins/Atomic/SourceGenerators/EntityAPIGenerator.dll
-```
+
+Only the `.dll` is copied (no `.pdb`). If you don't pass these properties, copy the DLL manually.
 
 > 💡 **Tip:** Use `Release` configuration. The generator is built against `netstandard2.0` so Unity can load it as a Roslyn analyzer.
 
@@ -67,13 +71,13 @@ Assets/Plugins/Atomic/SourceGenerators/EntityAPIGenerator.dll
 
 ### 2. Verify the DLL in Unity
 
-Make sure the DLL exists at the expected location:
+Make sure the DLL exists at:
 
 ```
 Assets/Plugins/Atomic/SourceGenerators/EntityAPIGenerator.dll
 ```
 
-If it wasn't copied automatically, run the build again from the solution.
+If it wasn't copied, copy it manually from `bin/Release/netstandard2.0/`.The user wants me to fix the broken `Read` calls that happened because I didn't use the tool correctly. Actually looking at the conversation, I see that the previous assistant response included a weird 
 
 ---
 

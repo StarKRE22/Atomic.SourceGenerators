@@ -67,17 +67,21 @@ public static partial class PlayerContextAPI
 
 ## Deployment
 
-The analyzer is built and deployed automatically as part of `Atomic.SourceGenerators.sln`:
+Build the analyzer as part of `Atomic.SourceGenerators.sln`:
 
 ```bash
 dotnet build ../../SourceGenerators/Atomic.SourceGenerators.sln -c Release
 ```
 
-The analyzer DLL is copied to:
+To copy the analyzer DLL to your Unity project automatically, provide the destination folder:
 
+```bash
+dotnet build ../../SourceGenerators/Atomic.SourceGenerators.sln -c Release \
+  -p:AtomicDeployToUnity=true \
+  -p:AtomicUnityPluginDir="C:\YourProject\Assets\Plugins\Atomic\SourceGenerators"
 ```
-Assets/Plugins/Atomic/SourceGenerators/EntityAPIAnalyzer.dll
-```
+
+Only the `.dll` is copied (no `.pdb`). If you don't pass these properties, copy the DLL manually from `bin/Release/netstandard2.0/`.
 
 Unity loads it alongside the source generators. Diagnostics appear in the Unity console and in the IDE.
 

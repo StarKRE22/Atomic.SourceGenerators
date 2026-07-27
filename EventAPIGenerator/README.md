@@ -97,7 +97,15 @@ From the `SourceGenerators` directory:
 dotnet build Atomic.SourceGenerators.sln -c Release
 ```
 
-The generator DLL and PDB are copied to `Assets/Plugins/Atomic/SourceGenerators/` automatically.
+To copy the generator DLL to your Unity project automatically, provide the destination folder:
+
+```bash
+dotnet build Atomic.SourceGenerators.sln -c Release \
+  -p:AtomicDeployToUnity=true \
+  -p:AtomicUnityPluginDir="C:\YourProject\Assets\Plugins\Atomic\SourceGenerators"
+```
+
+Only the `.dll` is copied (no `.pdb`). If you don't pass these properties, copy the DLL manually from `bin/Release/netstandard2.0/`.Provide only the new content of the file. Do not include explanations or old content.
 
 ## Implementation notes
 
