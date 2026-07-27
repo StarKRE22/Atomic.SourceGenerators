@@ -19,13 +19,24 @@ SourceGenerators/
 │   ├── CodeEmitter.cs
 │   ├── Models/
 │   └── README.md
-├── EventAPIGenerator/             # [EventAPI] generator (skeleton)
+├── EventAPIGenerator/             # [EventAPI] generator for event keys
 │   ├── EventAPIGenerator.csproj
-│   └── EventAPIGenerator.cs
-└── EntityAPIAnalyzer/               # diagnostics for [EntityAPI] classes
-    ├── EntityAPIAnalyzer.csproj
-    ├── EntityAPIAnalyzer.cs
-    ├── EntityAPIDiagnostics.cs
+│   ├── EventAPIGenerator.cs
+│   ├── EventAPIParser.cs
+│   ├── CodeEmitter.cs
+│   ├── Models/
+│   └── README.md
+├── EntityAPIAnalyzer/             # diagnostics + code fixes for [EntityAPI]
+│   ├── EntityAPIAnalyzer.csproj
+│   ├── EntityAPIAnalyzer.cs
+│   ├── EntityAPIDiagnostics.cs
+│   ├── EntityAPICodeFixProvider.cs
+│   └── README.md
+└── EventAPIAnalyzer/              # diagnostics + code fixes for [EventAPI]
+    ├── EventAPIAnalyzer.csproj
+    ├── EventAPIAnalyzer.cs
+    ├── EventAPIDiagnostics.cs
+    ├── EventAPICodeFixProvider.cs
     └── README.md
 ```
 
@@ -104,6 +115,8 @@ Assets/Plugins/Atomic/SourceGenerators/
 
 - [EntityAPIGenerator README](EntityAPIGenerator/README.md) — usage of `[EntityAPI]`, generated tag/value extension methods, and Unity import settings.
 - [EntityAPIAnalyzer README](EntityAPIAnalyzer/README.md) — analyzer rules and code fixes for `[EntityAPI]` class declarations.
+- [EventAPIGenerator README](EventAPIGenerator/README.md) — usage of `[EventAPI]`, generated event-bus extension methods, and Unity import settings.
+- [EventAPIAnalyzer README](EventAPIAnalyzer/README.md) — analyzer rules and code fixes for `[EventAPI]` class declarations.
 
 ## ⚠️ Important Notes
 

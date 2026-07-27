@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>EventAPIAnalyzer</AssemblyName>
+    <RootNamespace>EventAPIAnalyzer</RootNamespace>
+    <!-- RS2007/RS2008: analyzer release tracking is intentionally disabled for this project. -->
+    <NoWarn>$(NoWarn);RS2007;RS2008</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Workspaces reference is required for the CodeFixProvider.
+         ExcludeAssets="runtime" prevents bundling the workspace assemblies;
+         Roslyn provides them at runtime. -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.0" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <!-- Auto-copy analyzer DLL and PDB to Unity plugin folder on build -->
+  <Target Name="CopyToUnity" AfterTargets="Build">
+    <PropertyGroup>
+      <_UnityPluginDir>$([MSBuild]::NormalizeDirectory('$(ProjectDir)..\..\Assets\Plugins\Atomic\SourceGenerators'))</_UnityPluginDir>
+    </PropertyGroup>
+    <Copy SourceFiles="$(TargetDir)$(TargetName).dll" DestinationFolder="$(_UnityPluginDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(_UnityPluginDir)" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    <Message Text="EventAPIAnalyzer deployed to $(_UnityPluginDir)" Importance="high" />
+  </Target>
+
+</Project>
